@@ -1,8 +1,10 @@
 # Imports
 import pygame
+import random
 
 # Initialize game engine
 pygame.init()
+
 
 
 # Window
@@ -29,6 +31,8 @@ GREEN = (100, 255, 100)
 ship_img = pygame.image.load('images/p1back.png')
 laser_img = pygame.image.load('images/bullet.png')
 field = pygame.image.load("images/footballfield.png")
+bomb_img  = pygame.image.load("images/anvil.jpg")
+enemy_img = pygame.image.load('images/p1back.png')
 
 
 # Game classes
@@ -56,8 +60,16 @@ class Ship(pygame.sprite.Sprite):
         laser.rect.centery = self.rect.top
         lasers.add(laser)
 
-    def update(self):
-        pass
+    def update(self, bombs):
+        hit_list = pygame.sprite.spritecollide(self, bombs, True)
+
+        for hit in hit_list:
+            #OOF.play()
+            self.shield -= 1
+
+        if self.shield == 0:
+            #EXPLOSION.play()
+            self.kill()
     
 class Laser(pygame.sprite.Sprite):
     
@@ -72,7 +84,7 @@ class Laser(pygame.sprite.Sprite):
     def update(self):
         self.rect.y -= self.speed
     
-class Mob:
+class Mob(pygame.sprite.Sprite):
 
     def __init__(self, x, y, image):
         super().__init__()
@@ -81,41 +93,83 @@ class Mob:
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
+    def drop_bomb(self):
+        bomb = Bomb(bomb_img)
+        bomb.rect.centerx = self.rect.centerx
+        bomb.rect.centery = self.rect.bottom
+        bombs.add(bomb)
+        
+
+    def update(self, lasers):
+        hit_list = pygame.sprite.spritecollide(self, lasers, True)
+
+        if len(hit_list) > 0:
+           # EXPLOSION.play()
+            self.kill()
+
+
+
+class Bomb(pygame.sprite.Sprite):
+    
+    def __init__(self, image):
+        super().__init__()
+
+        self.image = image
+        self.rect = image.get_rect()
         
         self.speed = 3
-        self.shield = 10
 
     def update(self):
-        pass
-
-
-class Bomb:
-    
-    def __init__(self):
-        pass
-
-    def update(self):
-        pass
+        self.rect.y += self.speed
     
     
 class Fleet:
 
-    def __init__(self):
+    def __init__(self, mobs):
+        self.mobs = mobs
+        self.bomb_rate = 60
+
+    def move(self):
         pass
 
+    def choose_bomber(self):
+        rand = random.randrange(0, self.bomb_rate)
+        all_mobs = mobs.sprites()
+        
+        if len(all_mobs) > 0 and rand == 0:
+            return random.choice(all_mobs)
+        else:
+            return None
+    
     def update(self):
-        pass
+        self.move()
+
+        bomber = self.choose_bomber()
+        if bomber != None:
+            bomber.drop_bomb()
 
     
 # Make game objects
 ship = Ship(384, 536, ship_img)
-
+mob1 = Mob (123,64,enemy_img)
+mob2 = Mob (256,64,enemy_img)
+mob3 = Mob (364,64,enemy_img)
 
 # Make sprite groups
 player = pygame.sprite.GroupSingle()
 player.add(ship)
 
 lasers = pygame.sprite.Group()
+mobs = pygame.sprite.Group()
+mobs.add(mob1,mob2,mob3)
+
+
+bombs = pygame.sprite.Group()
+
+# Make fleet
+fleet = Fleet(mobs)
+
 
 # Game loop
 done = False
@@ -138,14 +192,20 @@ while not done:
         
     
     # Game logic (Check for collisions, update points, etc.)
-    player.update()
-    lasers.update()   
-
+   
+    player.update(bombs)
+    lasers.update()
+    bombs.update()
+    mobs.update(lasers)
+    fleet.update()
         
     # Drawing code (Describe the picture. It isn't actually drawn yet.)
     screen.blit(field,(0,0))
     lasers.draw(screen)
+    bombs.draw(screen)
     player.draw(screen)
+    mobs.draw(screen)
+
 
     
     # Update screen (Actually draw the picture in the window.)
