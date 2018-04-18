@@ -28,7 +28,8 @@ YELLOW = (255, 255, 0)
 GREEN = (100, 255, 100)
 
 # Images
-ship_img = pygame.image.load('images/p1back.png')
+ship_img = pygame.image.load('images/p1backp.png')
+enemy = pygame.image.load('images/p1fronty.png')
 laser_img = pygame.image.load('images/bullet.png')
 field = pygame.image.load("images/footballfield.png")
 bomb_img  = pygame.image.load("images/anvil.jpg")
@@ -156,6 +157,11 @@ mob1 = Mob (123,64,enemy_img)
 mob2 = Mob (256,64,enemy_img)
 mob3 = Mob (364,64,enemy_img)
 
+
+enemy1 = Mob (123,164,enemy)
+enemy2 = Mob (256,164,enemy)
+enemy3 = Mob (364,164,enemy)
+
 # Make sprite groups
 player = pygame.sprite.GroupSingle()
 player.add(ship)
@@ -164,6 +170,8 @@ lasers = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
 mobs.add(mob1,mob2,mob3)
 
+enemy  = pygame.sprite.Group()
+enemy.add(enemy1,enemy2,enemy3)
 
 bombs = pygame.sprite.Group()
 
@@ -205,6 +213,7 @@ while not done:
     bombs.draw(screen)
     player.draw(screen)
     mobs.draw(screen)
+    enemy.draw(screen)
 
 
     
