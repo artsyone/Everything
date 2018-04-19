@@ -31,6 +31,7 @@ GREEN = (0, 255, 0)
 #images
 bullet = pygame.image.load("images/bullet.png")
 field = pygame.image.load("images/footballfield.png")
+p1 = pygame.image.load("images/p1back.png")
 
 
 # Game classes
@@ -62,7 +63,7 @@ class Ship:
 
     def draw(self):
         rect = [self.x, self.y, self.w, self.h]
-        pygame.draw.rect(screen, RED, rect)
+        screen.blit(p1,( rect))
     
 class Laser:
     
