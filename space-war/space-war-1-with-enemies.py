@@ -29,7 +29,7 @@ GREEN = (100, 255, 100)
 # Images
 ship_img = pygame.image.load('assets/images/player.png')
 laser_img = pygame.image.load('assets/images/laserRed.png')
-enemy_img = pygame.image.load('assets/images/enemyShip.png')
+mob_img = pygame.image.load('assets/images/enemyShip.png')
 bomb_img = pygame.image.load('assets/images/laserGreen.png')
 
 # Sounds
@@ -41,10 +41,10 @@ class Ship(pygame.sprite.Sprite):
         super().__init__()
 
         self.image = image
-        self.rect = image.get_rect()
+        self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-
+        
         self.speed = 3
         self.shield = 5
 
@@ -55,18 +55,16 @@ class Ship(pygame.sprite.Sprite):
         self.rect.x += self.speed
 
     def shoot(self):
-        las = Laser(laser_img)
-        
-        las.rect.centerx = self.rect.centerx
-        las.rect.centery = self.rect.top
-        
-        lasers.add(las)
+        laser = Laser(laser_img)
+        laser.rect.centerx = self.rect.centerx
+        laser.rect.centery = self.rect.top
+        lasers.add(laser)
 
     def update(self, bombs):
         hit_list = pygame.sprite.spritecollide(self, bombs, True)
 
         for hit in hit_list:
-            #OOF.play()
+            # play hit sound
             self.shield -= 1
 
         if self.shield == 0:
@@ -79,20 +77,19 @@ class Laser(pygame.sprite.Sprite):
         super().__init__()
 
         self.image = image
-        self.rect = image.get_rect()
+        self.rect = self.image.get_rect()
         
-        self.speed = 6
+        self.speed = 5
 
     def update(self):
         self.rect.y -= self.speed
-    
     
 class Mob(pygame.sprite.Sprite):
     def __init__(self, x, y, image):
         super().__init__()
 
         self.image = image
-        self.rect = image.get_rect()
+        self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
 
@@ -101,7 +98,7 @@ class Mob(pygame.sprite.Sprite):
         bomb.rect.centerx = self.rect.centerx
         bomb.rect.centery = self.rect.bottom
         bombs.add(bomb)
-        
+    
     def update(self, lasers):
         hit_list = pygame.sprite.spritecollide(self, lasers, True)
 
@@ -116,7 +113,7 @@ class Bomb(pygame.sprite.Sprite):
         super().__init__()
 
         self.image = image
-        self.rect = image.get_rect()
+        self.rect = self.image.get_rect()
         
         self.speed = 3
 
@@ -128,10 +125,28 @@ class Fleet:
 
     def __init__(self, mobs):
         self.mobs = mobs
+        self.moving_right = True
+        self.speed = 5
         self.bomb_rate = 60
 
     def move(self):
-        pass
+        reverse = False
+        
+        for m in mobs:
+            if self.moving_right:
+                m.rect.x += self.speed
+                if m.rect.right >= WIDTH:
+                    reverse = True
+            else:
+                m.rect.x -= self.speed
+                if m.rect.left <=0:
+                    reverse = True
+
+        if reverse == True:
+            self.moving_right = not self.moving_right
+            for m in mobs:
+                m.rect.y += 32
+            
 
     def choose_bomber(self):
         rand = random.randrange(0, self.bomb_rate)
@@ -152,12 +167,13 @@ class Fleet:
     
 # Make game objects
 ship = Ship(384, 536, ship_img)
-mob1 = Mob(128, 64, enemy_img)
-mob2 = Mob(256, 64, enemy_img)
-mob3 = Mob(384, 64, enemy_img)
+mob1 = Mob(128, 64, mob_img)
+mob2 = Mob(256, 64, mob_img)
+mob3 = Mob(384, 64, mob_img)
+
 
 # Make sprite groups
-player = pygame.sprite.Group()
+player = pygame.sprite.GroupSingle()
 player.add(ship)
 
 lasers = pygame.sprite.Group()
@@ -167,7 +183,7 @@ mobs.add(mob1, mob2, mob3)
 
 bombs = pygame.sprite.Group()
 
-# Make fleet
+
 fleet = Fleet(mobs)
 
 # Game loop
@@ -192,16 +208,17 @@ while not done:
     
     # Game logic (Check for collisions, update points, etc.)
     player.update(bombs)
-    lasers.update()
-    bombs.update()
+    lasers.update()   
     mobs.update(lasers)
+    bombs.update()
     fleet.update()
+
         
     # Drawing code (Describe the picture. It isn't actually drawn yet.)
     screen.fill(BLACK)
     lasers.draw(screen)
-    bombs.draw(screen)
     player.draw(screen)
+    bombs.draw(screen)
     mobs.draw(screen)
 
     

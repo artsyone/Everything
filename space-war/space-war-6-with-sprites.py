@@ -23,46 +23,56 @@ RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 YELLOW = (255, 255, 0)
-GREEN = (0, 255, 0)
+GREEN = (100, 255, 100)
 
 # Images
-
+ship_img = pygame.image.load('assets/images/player.png')
+laser_img = pygame.image.load('assets/images/laserRed.png')
 
 
 # Game classes
-class Ship:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.w = 32
-        self.h = 32
+class Ship(pygame.sprite.Sprite):
+    def __init__(self, x, y, image):
+        super().__init__()
+
+        self.image = image
+        self.rect = image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
         self.speed = 3
         self.shield = 10
 
     def move_left(self):
-        self.x -= self.speed
+        self.rect.x -= self.speed
         
     def move_right(self):
-        self.x += self.speed
+        self.rect.x += self.speed
 
     def shoot(self):
-        print("Pew!")
+        las = Laser(laser_img)
+        
+        las.rect.centerx = self.rect.centerx
+        las.rect.centery = self.rect.top
+        
+        lasers.add(las)
 
     def update(self):
         pass
+    
+class Laser(pygame.sprite.Sprite):
+    
+    def __init__(self, image):
+        super().__init__()
 
-    def draw(self):
-        rect = [self.x, self.y, self.w, self.h]
-        pygame.draw.rect(screen, RED, rect)
-    
-class Laser:
-    
-    def __init__(self):
-        pass
+        self.image = image
+        self.rect = image.get_rect()
+        
+        self.speed = 6
 
     def update(self):
-        pass
-
+        self.rect.y -= self.speed
+    
     
 class Mob:
 
@@ -92,7 +102,13 @@ class Fleet:
 
     
 # Make game objects
-player = Ship(384, 536)
+ship = Ship(384, 536, ship_img)
+
+# Make sprite groups
+player = pygame.sprite.Group()
+player.add(ship)
+
+lasers = pygame.sprite.Group()
 
 # Game loop
 done = False
@@ -104,24 +120,24 @@ while not done:
             done = True
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                player.shoot()
+                ship.shoot()
 
     pressed = pygame.key.get_pressed()
 
     if pressed[pygame.K_LEFT]:
-        player.move_left()
+        ship.move_left()
     elif pressed[pygame.K_RIGHT]:
-        player.move_right()
+        ship.move_right()
         
     
     # Game logic (Check for collisions, update points, etc.)
-    
+    lasers.update()
 
         
     # Drawing code (Describe the picture. It isn't actually drawn yet.)
     screen.fill(BLACK)
-    player.draw()
-
+    lasers.draw(screen)
+    player.draw(screen)
 
     
     # Update screen (Actually draw the picture in the window.)
