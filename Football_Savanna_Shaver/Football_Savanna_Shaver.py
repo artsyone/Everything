@@ -80,9 +80,10 @@ class Ship(pygame.sprite.Sprite):
 
         if self.shield == 0:
             #EXPLOSION.play()
-            self.kill() 
+            self.kill()
 
-        
+        if  pygame.sprite.spritecollide(self, mobs, True):
+            self.kill()
     
 class Laser(pygame.sprite.Sprite):
     
@@ -96,6 +97,8 @@ class Laser(pygame.sprite.Sprite):
 
     def update(self):
         self.rect.y -= self.speed
+        if self.rect.bottom <= 0 :
+            self.kill()
     
 class Mob(pygame.sprite.Sprite):
 
@@ -171,6 +174,9 @@ class Bomb(pygame.sprite.Sprite):
 
         if len(hit_list) > 0:
            # EXPLOSION.play()
+            self.kill()
+
+        if self.rect.top >= HEIGHT :
             self.kill()
 
 class Fleet:
