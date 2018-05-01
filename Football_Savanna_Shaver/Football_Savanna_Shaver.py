@@ -20,6 +20,13 @@ pygame.display.set_caption(TITLE)
 clock = pygame.time.Clock()
 refresh_rate = 60
 
+
+# Fonts
+FONT_SM = pygame.font.Font(None, 24)
+FONT_MD = pygame.font.Font(None, 32)
+FONT_LG = pygame.font.Font(None, 64)
+FONT_XL = pygame.font.Font("fonts/sports.ttf", 96)
+
 # Colors
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
@@ -34,6 +41,7 @@ laser_img = pygame.image.load('images/bullet.png')
 field = pygame.image.load("images/footballfield1.png")
 bomb_img  = pygame.image.load("images/p1fronty.png")
 enemy_img = pygame.image.load('images/p1back.png')
+crowds = pygame.image.load('images/watchfootball.jpg')
 
 
 #sounds
@@ -43,7 +51,9 @@ sad = pygame.mixer.Sound("sounds/sad.ogg")
 run = False
 
 
-        
+START = 0
+PLAYING = 1
+END = 2        
 
 # Game classes
 class Ship(pygame.sprite.Sprite):
@@ -166,7 +176,7 @@ class Bomb(pygame.sprite.Sprite):
         
         self.speed = 3
 
-    def update(self,lasers):
+    def update(self,lasers,player):
         self.rect.y += self.speed
 
         
@@ -174,10 +184,11 @@ class Bomb(pygame.sprite.Sprite):
 
         if len(hit_list) > 0:
            # EXPLOSION.play()
+            player.score += 1
             self.kill()
 
-        if self.rect.top >= HEIGHT :
-            self.kill()
+        #if self.rect.top >= HEIGHT :
+            #self.kill()
 
 class Fleet:
 
@@ -286,10 +297,11 @@ mob3 = Mob (364,-65,enemy)
 team1 = Team (123,564,enemy_img)
 team2 = Team (256,564,enemy_img)
 team3 = Team  (364,564,enemy_img)
-
+  
 # Make sprite groups
 player = pygame.sprite.GroupSingle()
 player.add(ship)
+player.score = 0
 
 lasers = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
@@ -304,9 +316,23 @@ bombs = pygame.sprite.Group()
 fleet = Fleet(mobs)
 fleetT = FleetT(team)
 
+# set stage
+stage = START
+
+# Game helper functions
+def show_title_screen():
+    screen.blit(crowds,(0,0))
+    title_text = FONT_XL.render("FOOTBALL!", 1, RED)
+    screen.blit(title_text, [208, 350])
+
+def show_stats(player):
+    score_text = FONT_MD.render(str(player.score), 1, RED)
+    screen.blit(score_text, [32, 32])
 
 # Game loop
 pygame.mixer.music.play(-1)
+
+
 done = False
 
 while not done:
@@ -315,24 +341,26 @@ while not done:
         if event.type == pygame.QUIT:
             done = True
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                ship.shoot()
-            if event.key == pygame.K_x:
-                done = True 
+            if stage == START:
+                if event.key == pygame.K_SPACE:
+                    stage = PLAYING
+            elif stage == PLAYING:
+                if event.key == pygame.K_SPACE:
+                    ship.shoot()
 
-    pressed = pygame.key.get_pressed()
+    if stage == PLAYING:
+        pressed = pygame.key.get_pressed()
 
-    if pressed[pygame.K_LEFT]:
-        ship.move_left()
-    elif pressed[pygame.K_RIGHT]:
-        ship.move_right()
-        
+        if pressed[pygame.K_LEFT]:
+            ship.move_left()
+        elif pressed[pygame.K_RIGHT]:
+            ship.move_right()
     
     # Game logic (Check for collisions, update points, etc.)
    
     player.update(bombs)
     lasers.update()
-    bombs.update(lasers)
+    bombs.update(lasers,player)
     mobs.update(lasers)
     team.update(lasers)
     fleet.update()
@@ -346,6 +374,13 @@ while not done:
     player.draw(screen)
     mobs.draw(screen)
     team.draw(screen)
+
+    
+    show_stats(player)
+
+    if stage == START:
+       
+        show_title_screen()
 
 
     
