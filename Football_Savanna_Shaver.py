@@ -20,12 +20,12 @@ pygame.display.set_caption(TITLE)
 clock = pygame.time.Clock()
 refresh_rate = 60
 
+
 # Fonts
 FONT_SM = pygame.font.Font(None, 24)
 FONT_MD = pygame.font.Font(None, 32)
 FONT_LG = pygame.font.Font(None, 64)
-FONT_XL = pygame.font.Font(None, 96)
-
+FONT_XL = pygame.font.Font("fonts/sports.ttf", 96)
 
 # Colors
 RED = (255, 0, 0)
@@ -41,7 +41,8 @@ laser_img = pygame.image.load('images/bullet.png')
 field = pygame.image.load("images/footballfield1.png")
 bomb_img  = pygame.image.load("images/p1fronty.png")
 enemy_img = pygame.image.load('images/p1back.png')
-
+crowds = pygame.image.load('images/watchfootball.jpg')
+win = pygame.image.load('images/fanshappy.jpg')
 
 #sounds
 crowd = pygame.mixer.music.load("sounds/crowd.ogg")
@@ -128,10 +129,12 @@ class Mob(pygame.sprite.Sprite):
 
     def update(self, lasers):
         hit_list = pygame.sprite.spritecollide(self, lasers, True)
-
+        hit = pygame.sprite.spritecollide(self, lasers, True)
         if len(hit_list) > 0:
            # EXPLOSION.play()
             self.kill()
+        if len(hit) == 0:
+            stage = END
 class Team(pygame.sprite.Sprite):
 
     def __init__(self, x, y, image):
@@ -148,11 +151,10 @@ class Team(pygame.sprite.Sprite):
         self.rect.y = y
         
         self.speed = 5
-       
-            
+                      
     def update(self, lasers):
         hit_list = pygame.sprite.spritecollide(self, lasers, True)
-
+    
         if len(hit_list) > 0:
              
             
@@ -161,8 +163,9 @@ class Team(pygame.sprite.Sprite):
 
         else:
             pass
-                
-        
+
+    def has_scored(self):
+        return self.rect.y <= 0
 
 
 class Bomb(pygame.sprite.Sprite):
@@ -296,10 +299,11 @@ mob3 = Mob (364,-65,enemy)
 team1 = Team (123,564,enemy_img)
 team2 = Team (256,564,enemy_img)
 team3 = Team  (364,564,enemy_img)
-
+  
 # Make sprite groups
 player = pygame.sprite.GroupSingle()
 player.add(ship)
+player.score = 0
 
 lasers = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
@@ -319,15 +323,26 @@ stage = START
 
 # Game helper functions
 def show_title_screen():
-    title_text = FONT_XL.render("Space War!", 1, WHITE)
-    screen.blit(title_text, [128, 204])
+    screen.blit(crowds,(0,0))
+    title_text = FONT_XL.render("FOOTBALL!", 1, RED)
+    screen.blit(title_text, [208, 350])
 
 def show_stats(player):
-    score_text = FONT_MD.render(str(player.score), 1, WHITE)
+    score_text = FONT_MD.render(str(player.score), 1, RED)
     screen.blit(score_text, [32, 32])
+
+
+def show_end_screen():
+    screen.blit(win,(0,0))
+    title_text = FONT_XL.render("FOOTBALL!", 1, RED)
+    score_text = FONT_MD.render(str(player.score), 1, RED)
+    screen.blit(score_text, [32, 32])
+
 
 # Game loop
 pygame.mixer.music.play(-1)
+
+
 done = False
 
 while not done:
@@ -335,15 +350,14 @@ while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
+            
         elif event.type == pygame.KEYDOWN:
             if stage == START:
                 if event.key == pygame.K_SPACE:
                     stage = PLAYING
-        elif stage == PLAYING:
-            if event.key == pygame.K_SPACE:
-                ship.shoot()
-            if event.key == pygame.K_x:
-                done = True 
+            elif stage == PLAYING:
+                if event.key == pygame.K_SPACE:
+                    ship.shoot()
 
     if stage == PLAYING:
         pressed = pygame.key.get_pressed()
@@ -352,6 +366,10 @@ while not done:
             ship.move_left()
         elif pressed[pygame.K_RIGHT]:
             ship.move_right()
+        
+    if stage == END:
+         if event.key == pygame.K_x:
+                    done = True
     
     # Game logic (Check for collisions, update points, etc.)
    
@@ -362,7 +380,10 @@ while not done:
     team.update(lasers)
     fleet.update()
     fleetT.update()
-    
+
+    for t in team: 
+        if t.has_scored():
+            stage = END     
         
     # Drawing code (Describe the picture. It isn't actually drawn yet.)
     screen.blit(field,(0,0))
@@ -376,7 +397,13 @@ while not done:
     show_stats(player)
 
     if stage == START:
+       
         show_title_screen()
+
+
+    if stage == END:
+       
+        show_end_screen()
 
 
     
