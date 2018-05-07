@@ -21,13 +21,6 @@ pygame.display.set_caption(TITLE)
 clock = pygame.time.Clock()
 refresh_rate = 60
 
-
-# Fonts
-FONT_SM = pygame.font.Font(None, 24)
-FONT_LG = pygame.font.Font("fonts/score.ttf", 64)
-FONT_MD = pygame.font.Font(None, 64)
-FONT_XL = pygame.font.Font("fonts/sports.ttf", 96)
-
 # Colors
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
@@ -35,6 +28,14 @@ BLACK = (0, 0, 0)
 YELLOW = (255, 255, 0)
 GREEN = (100, 255, 100)
 DARKGREEN = (1,63,30)
+
+
+# Fonts
+FONT_SM = pygame.font.Font("fonts/nums.ttf", 24)
+FONT_LG = pygame.font.Font("fonts/score.ttf", 64)
+FONT_MD = pygame.font.Font(None, 32)
+FONT_XL = pygame.font.Font("fonts/sports.ttf", 96)
+
 
 # Images
 ship_img = pygame.image.load('images/p1backp.png')
@@ -45,12 +46,21 @@ bomb_img  = pygame.image.load("images/p1fronty.png")
 enemy_img = pygame.image.load('images/p1back.png')
 crowds = pygame.image.load('images/watchfootball.jpg')
 winner = pygame.image.load('images/winner.png')
-win = pygame.image.load('images/fanshappy.jpg')
+#dam = pygame.image.load('images/p1backdam.jpg')
+thing1 = pygame.image.load('images/mob4.png')
+thing2 = pygame.image.load('images/mob3.png')
+thing3 = pygame.image.load('images/mob0.png')
+
+
 #sounds
 
 theme = pygame.mixer.music.load("sounds/theme.ogg")
 sad = pygame.mixer.Sound("sounds/sad.ogg")
+ouch = pygame.mixer.Sound("sounds/ouch.ogg")
 theme = pygame.mixer.Sound("sounds/theme.ogg")
+bombbam = pygame.mixer.Sound("sounds/hitabomb.ogg")
+oof = pygame.mixer.Sound("sounds/oof.ogg")
+yeah = pygame.mixer.Sound("sounds/ohyeah.ogg")
 
 run = False
 
@@ -70,7 +80,9 @@ class Ship(pygame.sprite.Sprite):
         self.rect.y = y
         
         self.speed = 5
-        self.shield = 5
+        #self.shield = 5
+
+       #dam_change = [dam,dam1,dam2,dam3,dam4,dam5)
 
     def move_left(self):
         self.rect.x -= self.speed
@@ -78,27 +90,29 @@ class Ship(pygame.sprite.Sprite):
     def move_right(self):
         self.rect.x += self.speed
 
+     
+
     def shoot(self):
         laser = Laser(laser_img)
         laser.rect.centerx = self.rect.centerx
         laser.rect.centery = self.rect.top
         lasers.add(laser)    
 
-    def update(self, bombs,mobs):
+    def update(self, bombs,mobs,player):
         hit_list = pygame.sprite.spritecollide(self, bombs, True)
-        hits = pygame.sprite.spritecollide(self, mobs, True)
+       
 
         for hit in hit_list:
-            pygame.mixer.music.pause()
-            sad.play()
-            self.shield -= 1    
+            
+            ouch.play()
+            player.shield -= 20   
 
-        for h in hits:
-            
-            stage = END
-            
-        if self.shield == 0:
-            #EXPLOSION.play()
+        hit_list = pygame.sprite.spritecollide(self, mobs, False)
+        if len(hit_list) > 0:
+            self.shield = 0
+
+        if player.shield == 0:
+            sad.play()
             self.kill()
 
        
@@ -137,15 +151,76 @@ class Mob(pygame.sprite.Sprite):
 
     def update(self, lasers):
         hit_list = pygame.sprite.spritecollide(self, lasers, True)
-        hit = pygame.sprite.spritecollide(self, lasers, True)
+        
         if len(hit_list) > 0:
-           # EXPLOSION.play()
+            oof.play()
             player.score += 1
-            for e in  team:
+            for e in  receivers:
                 e.rect.y += 50
                 self.kill()
-        if len(hit) == 0:
+     
+        if len(hit_list) == 0:
             stage = END
+class Mobagain(pygame.sprite.Sprite):
+
+    def __init__(self, x, y, image):
+        super().__init__()
+
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.shield = 3 
+
+    def drop_bomb(self):
+        bomb = Bomb(bomb_img)
+        bomb.rect.centerx = self.rect.centerx
+        bomb.rect.centery = self.rect.bottom
+        bombs.add(bomb)
+        
+
+    def update(self, lasers):
+        hit_list = pygame.sprite.spritecollide(self, lasers, True)
+        for hit in hit_list:
+            ouch.play()
+            self.shield -= 1
+        
+        if len(hit_list) > 0:
+            oof.play()
+            player.score += 1
+            for e in  receivers:
+                e.rect.y += 50
+                self.kill()
+
+
+        if self.shield == 0:
+           yeah.play()
+           self.kill()
+
+
+class Bomb(pygame.sprite.Sprite):
+    
+    def __init__(self, image):
+        super().__init__()
+
+        self.image = image
+        self.rect = image.get_rect()
+        
+        self.speed = 3
+
+    def update(self,lasers,player):
+        self.rect.y += self.speed
+
+        
+        hit_list = pygame.sprite.spritecollide(self, lasers, True)
+
+        if len(hit_list) > 0:
+            bombbam.play()
+            player.score += 1
+            self.kill()
+
+        #if self.rect.top >= HEIGHT :
+            #self.kill()
 class Team(pygame.sprite.Sprite):
 
     def __init__(self, x, y, image):
@@ -169,7 +244,7 @@ class Team(pygame.sprite.Sprite):
         if len(hit_list) > 0:
              
             
-            for e in  team:
+            for e in  receivers:
                 e.rect.y -= 300
                 # e.rect.y -= self.speed
 
@@ -180,29 +255,7 @@ class Team(pygame.sprite.Sprite):
         return self.rect.y <= 0
 
 
-class Bomb(pygame.sprite.Sprite):
-    
-    def __init__(self, image):
-        super().__init__()
 
-        self.image = image
-        self.rect = image.get_rect()
-        
-        self.speed = 3
-
-    def update(self,lasers,player):
-        self.rect.y += self.speed
-
-        
-        hit_list = pygame.sprite.spritecollide(self, lasers, True)
-
-        if len(hit_list) > 0:
-           # EXPLOSION.play()
-            player.score += 1
-            self.kill()
-
-        #if self.rect.top >= HEIGHT :
-            #self.kill()
 
 class Fleet:
 
@@ -261,8 +314,8 @@ class Fleet:
             
               
 class FleetT:
-    def __init__(self, team):
-        self.team = team
+    def __init__(self, receivers):
+        self.receivers = receivers
         self.speed = 3
         self.moving_right = True
         
@@ -272,7 +325,7 @@ class FleetT:
         
             if self.moving_right:
             
-                for e in  team:
+                for e in  receivers:
                     e.rect.x += self.speed
                 
                 
@@ -281,7 +334,7 @@ class FleetT:
 
             else:
            
-                for e in  team:
+                for e in receivers:
                     e.rect.x -= self.speed
                     if e.rect.left <= 0:
                         reverse = True
@@ -290,7 +343,7 @@ class FleetT:
             if reverse:  
                 self.moving_right = not self.moving_right
                 
-                for e in team:
+                for e in receivers:
                     e.rect.x += 0
           
         
@@ -302,52 +355,77 @@ class FleetT:
 
     
 # Make game objects
-ship = Ship(384, 636, ship_img)
-mob1 = Mob (123,-65,enemy)
-mob2 = Mob (223,-65,enemy)
-mob3 = Mob (323,-65,enemy)
-mob4 = Mob (423,-65,enemy)
+ 
+def mobbyboys(mobs):
+    mob1 = Mob (123,-65,enemy)
+    mob2 = Mob (223,-65,enemy)
+    mob3 = Mob (323,-65,enemy)
+    mob4 = Mob (423,-65,enemy)
 
-mob5 = Mob (0,-165,enemy)
-mob6 = Mob (250,-165,enemy)
-mob7 = Mob (500,-165,enemy)
+    mob5 = Mob (0,-165,thing3)
+    mob6 = Mobagain (250,-165,thing1 )
+    mob7 = Mobagain (500,-165,thing2)
+
+    mobs.empty()
+    mobs.add(mob1,mob2,mob3,mob4,mob5,mob6,mob7)
 
 
-
-team1 = Team (123,564,enemy_img)
-team2 = Team (256,564,enemy_img)
-team3 = Team  (364,564,enemy_img)
   
 # Make sprite groups
 player = pygame.sprite.GroupSingle()
-player.add(ship)
+
 player.score = 0
+player.shield = 100
 
 lasers = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
-mobs.add(mob1,mob2,mob3,mob4,mob5,mob6,mob7)
 
-team = pygame.sprite.Group()
-team.add(team1,team2,team3)
+
+receivers = pygame.sprite.Group()
+
 
 bombs = pygame.sprite.Group()
 
 # Make fleet
 fleet = Fleet(mobs)
-fleetT = FleetT(team)
+fleetT = FleetT(receivers)
 
 # set stage
 stage = START
 
 # Game helper functions
+
+def setup():
+    global stage,ship,receivers, player
+    stage = START
+    ship = Ship(384, 636, ship_img)
+    
+    player.add(ship)
+
+    team1 = Team (123,564,enemy_img)
+    team2 = Team (256,564,enemy_img)
+    team3 = Team  (364,564,enemy_img)
+
+    receivers.empty()
+    receivers.add(team1,team2,team3)
+
+    mobbyboys(mobs)
+    
 def show_title_screen():
+
     screen.blit(crowds,(0,0))
     title_text = FONT_XL.render("FOOTBALL!", 1, RED)
     screen.blit(title_text, [208, 350])
 
 def show_stats(player):
     score_text = FONT_LG.render(str(player.score), 1, DARKGREEN)
-    screen.blit(score_text, [32, 32])
+    screen.blit(score_text, [32, 62])
+
+    shield_text = FONT_SM.render(str(player.shield), 1, DARKGREEN)
+    screen.blit(shield_text, [135, 32])
+
+    pygame.draw.rect(screen, WHITE, [32,32,100,25])
+    pygame.draw.rect(screen, GREEN, [32,32,(player.shield),25])
 
 
 def show_end_screen():
@@ -360,9 +438,9 @@ def show_end_screen():
 
 # Game loop
 
-
-
+setup()
 done = False
+pygame.mixer.music.play(-1)
 
 while not done:
     # Event processing (React to key presses, mouse clicks, etc.)
@@ -379,31 +457,36 @@ while not done:
                     ship.shoot()
             if event.key == pygame.K_x:
                     done = True
+            if stage == END:
+                if event.key == pygame.K_r:
+                    print("sup")
+                    setup()
+                
                     
     if stage == PLAYING:
+        
         pressed = pygame.key.get_pressed()
 
         if pressed[pygame.K_LEFT]:
-            ship.move_left()
+             ship.move_left()
         elif pressed[pygame.K_RIGHT]:
-            ship.move_right()
+             ship.move_right()
 
-        if stage == END:
-            if event.key == pygame.K_SPACE:
-                        stage = START
+
         
     
     # Game logic (Check for collisions, update points, etc.)
-   
-    player.update(bombs,mobs)
-    lasers.update()
-    bombs.update(lasers,player)
-    mobs.update(lasers)
-    team.update(lasers)
-    fleet.update()
-    fleetT.update()
+    if stage == PLAYING:
+            player.update(bombs,mobs,player)
+            lasers.update()
+            bombs.update(lasers,player)
+            mobs.update(lasers)
+            receivers.update(lasers)
+            fleet.update()
+            fleetT.update()
+            
 
-    for t in team: 
+    for t in receivers: 
         if t.has_scored():
             stage = END     
         
@@ -413,15 +496,15 @@ while not done:
     bombs.draw(screen)
     player.draw(screen)
     mobs.draw(screen)
-    team.draw(screen)
+    receivers.draw(screen)
+    
 
     
     show_stats(player)
 
     if stage == START:
         
-        theme.play()
-       
+        
         show_title_screen()
 
 
