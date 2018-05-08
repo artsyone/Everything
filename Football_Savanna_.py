@@ -115,6 +115,12 @@ class Ship(pygame.sprite.Sprite):
             sad.play()
             self.kill()
 
+
+        if self.rect.left <= 0:
+            self.rect.left = 0
+        elif self.rect.right >= WIDTH:
+            self.rect.right = WIDTH
+
        
     
 class Laser(pygame.sprite.Sprite):
@@ -161,6 +167,8 @@ class Mob(pygame.sprite.Sprite):
      
         if len(hit_list) == 0:
             stage = END
+
+        
 class Mobagain(pygame.sprite.Sprite):
 
     def __init__(self, x, y, image):
@@ -210,6 +218,7 @@ class Bomb(pygame.sprite.Sprite):
 
     def update(self,lasers,player):
         self.rect.y += self.speed
+        ####
 
         
         hit_list = pygame.sprite.spritecollide(self, lasers, True)
@@ -357,14 +366,14 @@ class FleetT:
 # Make game objects
  
 def mobbyboys(mobs):
-    mob1 = Mob (123,-65,enemy)
-    mob2 = Mob (223,-65,enemy)
-    mob3 = Mob (323,-65,enemy)
-    mob4 = Mob (423,-65,enemy)
+    mob1 = Mob (123,65,enemy)
+    mob2 = Mob (223,65,enemy)
+    mob3 = Mob (323,65,enemy)
+    mob4 = Mob (423,65,enemy)
 
-    mob5 = Mob (0,-165,thing3)
-    mob6 = Mobagain (250,-165,thing1 )
-    mob7 = Mobagain (500,-165,thing2)
+    mob5 = Mob (0,165,thing3)
+    mob6 = Mobagain (250,165,thing1 )
+    mob7 = Mobagain (500,165,thing2)
 
     mobs.empty()
     mobs.add(mob1,mob2,mob3,mob4,mob5,mob6,mob7)
@@ -374,8 +383,6 @@ def mobbyboys(mobs):
 # Make sprite groups
 player = pygame.sprite.GroupSingle()
 
-player.score = 0
-player.shield = 100
 
 lasers = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
@@ -410,6 +417,10 @@ def setup():
     receivers.add(team1,team2,team3)
 
     mobbyboys(mobs)
+
+    player.score = 0
+    player.shield = 100
+
     
 def show_title_screen():
 
@@ -491,7 +502,9 @@ while not done:
             stage = END     
         
     # Drawing code (Describe the picture. It isn't actually drawn yet.)
-    screen.blit(field,(0,0))
+    
+    screen.blit(field,(0,20))
+    pygame.draw.rect(screen, RED, [0,0,1000,50])
     lasers.draw(screen)
     bombs.draw(screen)
     player.draw(screen)
