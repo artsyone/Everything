@@ -50,6 +50,7 @@ winner = pygame.image.load('images/winner.png')
 thing1 = pygame.image.load('images/mob4.png')
 thing2 = pygame.image.load('images/mob3.png')
 thing3 = pygame.image.load('images/mob0.png')
+lose = pygame.image.load('images/footlose.jpg')
 
 
 #sounds
@@ -259,14 +260,14 @@ class Team(pygame.sprite.Sprite):
             
             for e in  receivers:
                 if level == 1: 
-                    e.rect.y -= 200
-                    levelup()
+                    e.rect.y += 200
+                   
                 if level == 2:
                     e.rect.y -= 100
-                    levelup()
+                    
                 if level == 3: 
                     e.rect.y -= 50
-                    levelup()
+                   
                 else:
                     e.rect.y -= 300
                     
@@ -418,7 +419,7 @@ stage = START
 # Game helper functions
 
 def setup():
-    global stage,ship,receivers, player,level
+    global stage,ship,receivers, player,level 
     stage = START
     ship = Ship(384, 636, ship_img)
     
@@ -438,9 +439,10 @@ def setup():
 
     level = 0 
 def levelup():
+    
     global stage,ship,receivers, player,level
     ship = Ship(384, 636, ship_img)
-    
+    stage = PLAYING
     player.add(ship)
 
     team1 = Team (123,564,enemy_img)
@@ -461,7 +463,7 @@ def show_title_screen():
 
 def show_stats(player):
     score_text = FONT_LG.render(str(player.score), 1, DARKGREEN)
-    screen.blit(score_text, [32, 62])
+    screen.blit(score_text, [32, 82])
 
     shield_text = FONT_SM.render(str(player.shield), 1, DARKGREEN)
     screen.blit(shield_text, [135, 32])
@@ -473,7 +475,7 @@ def show_stats(player):
     screen.blit(score_text, [32, 62])
 def show_end_screen():
     screen.fill(BLACK)
-    screen.blit(winner,(125,150))
+    screen.blit(lose,(125,150))
     title_text = FONT_XL.render("FOOTBALL!", 1, RED)
     score_text = FONT_LG.render(str(player.score), 1, RED)
     screen.blit(score_text, [32, 32])
@@ -528,12 +530,16 @@ while not done:
             fleet.update()
             fleetT.update()
             
-
+            if player.shield <= 0:
+                stage = END
     for t in receivers: 
         if t.has_scored():
-            
-            level +1 
-            #stage = END     
+            level += 1
+            levelup()
+            #stage = END
+
+
+        
         
     # Drawing code (Describe the picture. It isn't actually drawn yet.)
     
