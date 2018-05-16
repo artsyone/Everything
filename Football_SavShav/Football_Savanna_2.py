@@ -167,9 +167,7 @@ class Mob(pygame.sprite.Sprite):
             for e in  receivers:
                 e.rect.y += 50
                 self.kill()
-     
-        if len(hit_list) == 0:
-            stage = END
+   
 
         
 class Mobagain(pygame.sprite.Sprite):
@@ -200,7 +198,7 @@ class Mobagain(pygame.sprite.Sprite):
             oof.play()
             player.score += 1
             for e in  receivers:
-                e.rect.y += 50
+                e.rect.y += 150
                 self.kill()
 
 
@@ -259,16 +257,16 @@ class Team(pygame.sprite.Sprite):
              
             
             for e in  receivers:
-                if level == 1: 
-                    e.rect.y += 200
+                  if level == 1: 
+                    e.rect.y -= 200
                    
-                if level == 2:
+                  elif level == 2:
                     e.rect.y -= 100
                     
-                if level == 3: 
+                  elif level == 3: 
                     e.rect.y -= 50
                    
-                else:
+                  else:
                     e.rect.y -= 300
                     
                 # e.rect.y -= self.speed
@@ -279,7 +277,9 @@ class Team(pygame.sprite.Sprite):
     def has_scored(self):
         return self.rect.y <= 0
 
-
+    def has_lost(self):
+      
+        return self.rect.y >= 800
 
 
 class Fleet:
@@ -314,7 +314,7 @@ class Fleet:
                 self.moving_right = not self.moving_right
                 
                 for m in mobs:
-                    m.rect.y += 100
+                    m.rect.y += 50
 
             
                     
@@ -421,7 +421,7 @@ stage = START
 def setup():
     global stage,ship,receivers, player,level 
     stage = START
-    ship = Ship(384, 636, ship_img)
+    ship = Ship(384, 736, ship_img)
     
     player.add(ship)
 
@@ -441,7 +441,7 @@ def setup():
 def levelup():
     
     global stage,ship,receivers, player,level
-    ship = Ship(384, 636, ship_img)
+    ship = Ship(384, 736, ship_img)
     stage = PLAYING
     player.add(ship)
 
@@ -542,11 +542,16 @@ while not done:
             
             if player.shield <= 0:
                 stage = END
+                
+    for t in receivers: 
+        if t.has_lost():
+            stage = END
 
     more = False            
     for t in receivers: 
         if t.has_scored():
             more = True
+       
     if more:
         level += 1
         levelup()
