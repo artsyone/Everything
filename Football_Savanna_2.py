@@ -50,9 +50,13 @@ winner = pygame.image.load('images/winner.png')
 thing1 = pygame.image.load('images/mob4.png')
 thing2 = pygame.image.load('images/mob3.png')
 thing3 = pygame.image.load('images/mob0.png')
-lose = pygame.image.load('images/footlose.jpg')
+lose = pygame.image.load('images/footlose2.jpg')
+p1dam = pygame.image.load('images/p1backdam.png')
+p2dam = pygame.image.load('images/p1backdam2.png')
+p3dam = pygame.image.load('images/p1backdam3.png')
 
-
+p4dam = pygame.image.load('images/p1backdam4.png')
+p5dam = pygame.image.load('images/p1backdam5.png')
 #sounds
 
 theme = pygame.mixer.music.load("sounds/theme.ogg")
@@ -82,6 +86,7 @@ class Ship(pygame.sprite.Sprite):
         
         self.speed = 5
         #self.shield = 5
+        self.cooldown = [15,15]
 
        #dam_change = [dam,dam1,dam2,dam3,dam4,dam5)
 
@@ -97,7 +102,12 @@ class Ship(pygame.sprite.Sprite):
         laser = Laser(laser_img)
         laser.rect.centerx = self.rect.centerx
         laser.rect.centery = self.rect.top
-        lasers.add(laser)    
+        
+        lasers.add(laser)
+        
+        #if self.cooldown == self.cooldown:
+            #lasers.add(laser)
+            #self.cooldown == 0 
 
     def update(self, bombs,mobs,player):
         hit_list = pygame.sprite.spritecollide(self, bombs, True)
@@ -108,6 +118,17 @@ class Ship(pygame.sprite.Sprite):
             ouch.play()
             player.shield -= 20   
 
+
+        if player.shield == 80:
+            self.image = p1dam
+        if player.shield == 60:
+            self.image = p2dam
+        if player.shield == 40:
+            self.image = p3dam
+        if player.shield == 20:
+            self.image = p5dam
+        if player.shield == 0:
+            self.image = p5dam
         hit_list = pygame.sprite.spritecollide(self, mobs, False)
         if len(hit_list) > 0:
             self.shield = 0 
@@ -116,7 +137,8 @@ class Ship(pygame.sprite.Sprite):
             sad.play()
             self.kill()
 
-        
+        if self.cooldown[0] != self.cooldown[1]:
+            self.cooldown[0] += 1 
 
 
         if self.rect.left <= 0:
@@ -166,10 +188,11 @@ class Mob(pygame.sprite.Sprite):
             player.score += 1
             for e in  receivers:
                 e.rect.y += 50
-                self.kill()
-     
-        if len(hit_list) == 0:
-            stage = END
+
+    #def mob_pass(self):
+        #return self.rect.y <= 0
+                
+   
 
         
 class Mobagain(pygame.sprite.Sprite):
@@ -198,10 +221,10 @@ class Mobagain(pygame.sprite.Sprite):
         
         if len(hit_list) > 0:
             oof.play()
-            player.score += 1
+            player.score += 3
             for e in  receivers:
-                e.rect.y += 50
-                self.kill()
+                e.rect.y += 150
+               
 
 
         if self.shield == 0:
@@ -259,16 +282,16 @@ class Team(pygame.sprite.Sprite):
              
             
             for e in  receivers:
-                if level == 1: 
-                    e.rect.y += 200
+                  if level == 1: 
+                    e.rect.y -= 200
                    
-                if level == 2:
+                  elif level == 2:
                     e.rect.y -= 100
                     
-                if level == 3: 
+                  elif level == 3: 
                     e.rect.y -= 50
                    
-                else:
+                  else:
                     e.rect.y -= 300
                     
                 # e.rect.y -= self.speed
@@ -279,7 +302,9 @@ class Team(pygame.sprite.Sprite):
     def has_scored(self):
         return self.rect.y <= 0
 
-
+    def has_lost(self):
+      
+        return self.rect.y >= 800
 
 
 class Fleet:
@@ -314,7 +339,7 @@ class Fleet:
                 self.moving_right = not self.moving_right
                 
                 for m in mobs:
-                    m.rect.y += 100
+                    m.rect.y += 50
 
             
                     
@@ -387,7 +412,7 @@ def mobbyboys(mobs):
     mob3 = Mob (323,65,enemy)
     mob4 = Mob (423,65,enemy)
 
-    mob5 = Mob (0,165,thing3)
+    mob5 = Mobagain (0,165,thing3)
     mob6 = Mobagain (250,165,thing1 )
     mob7 = Mobagain (500,165,thing2)
 
@@ -421,7 +446,7 @@ stage = START
 def setup():
     global stage,ship,receivers, player,level 
     stage = START
-    ship = Ship(384, 636, ship_img)
+    ship = Ship(384, 736, ship_img)
     
     player.add(ship)
 
@@ -441,7 +466,7 @@ def setup():
 def levelup():
     
     global stage,ship,receivers, player,level
-    ship = Ship(384, 636, ship_img)
+    ship = Ship(384, 736, ship_img)
     stage = PLAYING
     player.add(ship)
 
@@ -462,6 +487,8 @@ def show_title_screen():
     screen.blit(title_text, [208, 350])
 
 def show_stats(player):
+    #score_text = FONT_MD.render("Score:", 1, RED)
+    #screen.blit(score_text, [32, 32])
     score_text = FONT_LG.render(str(player.score), 1, DARKGREEN)
     screen.blit(score_text, [32, 82])
 
@@ -470,15 +497,26 @@ def show_stats(player):
 
     pygame.draw.rect(screen, WHITE, [32,32,100,25])
     pygame.draw.rect(screen, GREEN, [32,32,(player.shield),25])
-
-    score_text = FONT_SM.render(str(level), 1, DARKGREEN)
-    screen.blit(score_text, [32, 62])
+    lev_text = FONT_SM.render("Level:", 1, DARKGREEN)
+    screen.blit(lev_text, [32, 62])
+    level_text = FONT_SM.render(str(level), 1, DARKGREEN)
+    screen.blit(level_text, [92, 64])
 def show_end_screen():
     screen.fill(BLACK)
-    screen.blit(lose,(125,150))
+    screen.blit(lose,(0,0))
     title_text = FONT_XL.render("FOOTBALL!", 1, RED)
     score_text = FONT_LG.render(str(player.score), 1, RED)
-    screen.blit(score_text, [32, 32])
+    screen.blit(score_text, [22, 32])
+ 
+    playagain_text = FONT_SM.render("To play again press R ", 1, DARKGREEN)
+    screen.blit(playagain_text, [110, 32])
+
+    end_text = FONT_SM.render("To quit the game press X " , 1, DARKGREEN)
+    screen.blit(end_text, [110, 62])
+
+    lose_text = FONT_LG.render("You Lose" , 1, DARKGREEN)
+    screen.blit(lose_text, [725, 32])
+    
 
 
 # Game loop
@@ -532,11 +570,20 @@ while not done:
             
             if player.shield <= 0:
                 stage = END
+                
+    for t in receivers: 
+        if t.has_lost():
+            stage = END
+
+    more = False            
     for t in receivers: 
         if t.has_scored():
-            level += 1
-            levelup()
-            #stage = END
+            more = True
+       
+    if more:
+        level += 1
+        levelup()
+        #stage = END
 
 
         
