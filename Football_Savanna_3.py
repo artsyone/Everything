@@ -1,4 +1,3 @@
-
 # Imports
 import pygame
 import random
@@ -507,9 +506,8 @@ def game_stats():
 
 
     
-    f = open('guru90.txt','a')
-    f.write('\n' + (name))
-    f.close()
+   
+    
 
 def stat_ts():
     
@@ -522,47 +520,38 @@ def stat_ts():
     
     
 
+
+                
+    
+
 def stats_stuff():
+    data_file = 'score.txt'
                 
-                
-              
+    with open(data_file, 'r') as f:
+        lines = f.read().splitlines()
 
-                    
-                    
-                with open('score.txt', 'r') as f:
-                    s_words = f.read().splitlines()
-                    
-                
-
-                data_file = 'score.txt'
-                
-                with open(data_file, 'r') as f:
-                    lines = f.read().splitlines()
-
-                scores = []
-                for line in lines:
-                    name, points = line.split(" ")
-                    scores.append((name, int(points)))
+    scores = [name,]
+    for line in lines:
+        name, points = line.split(" ")
+        scores.append((name, int(points)))
 
 
-                scores.sort(key=lambda x: x[1], reverse=True)
-                print(scores)
+    scores.sort(key=lambda x: x[1], reverse=True)
+    print(scores)
 
-               
+    '''
+    # scores = [("Coop", 4), ("Sav", 2), ... ]
 
-                high_name = scores[0][0]
-                high_score = scores[0][1]
-                
-                for s in scores:
-                    if s[1] > high_score:
-                        high_name = s[0]
-                        high_score = s[1]
+    high_name = scores[0][0]
+    high_score = scores[0][1]
+    
+    for s in scores:
+        if s[1] > high_score:
+            high_name = s[0]
+            high_score = s[1]
 
 
-                text3 = MY_FONT.render((high_name,high_score), True, WHITE)
-                screen.blit(text3, [325, 100])
-
-                
+        
                 pygame.draw.rect(screen, RED, [0,0,800,600])
                 text1 = MY_FONT.render(("Name"), True, WHITE)
                 screen.blit(text1, [125, 100])
@@ -608,7 +597,7 @@ def stats_stuff():
                 text10 = MY_FONT.render(str((player.score)), True, WHITE)
                 screen.blit(text10, [325, 500])
             
-
+    '''
 
 
 

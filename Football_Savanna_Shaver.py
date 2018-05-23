@@ -1,3 +1,4 @@
+
 # Imports
 import pygame
 import random
@@ -23,8 +24,8 @@ refresh_rate = 60
 
 # Fonts
 FONT_SM = pygame.font.Font(None, 24)
-FONT_MD = pygame.font.Font(None, 32)
-FONT_LG = pygame.font.Font(None, 64)
+FONT_LG = pygame.font.Font("fonts/score.ttf", 64)
+FONT_MD = pygame.font.Font(None, 64)
 FONT_XL = pygame.font.Font("fonts/sports.ttf", 96)
 
 # Colors
@@ -33,6 +34,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 YELLOW = (255, 255, 0)
 GREEN = (100, 255, 100)
+DARKGREEN = (1,63,30)
 
 # Images
 ship_img = pygame.image.load('images/p1backp.png')
@@ -42,11 +44,13 @@ field = pygame.image.load("images/footballfield1.png")
 bomb_img  = pygame.image.load("images/p1fronty.png")
 enemy_img = pygame.image.load('images/p1back.png')
 crowds = pygame.image.load('images/watchfootball.jpg')
+winner = pygame.image.load('images/winner.png')
 win = pygame.image.load('images/fanshappy.jpg')
-
 #sounds
-crowd = pygame.mixer.music.load("sounds/crowd.ogg")
+
+theme = pygame.mixer.music.load("sounds/theme.ogg")
 sad = pygame.mixer.Sound("sounds/sad.ogg")
+theme = pygame.mixer.Sound("sounds/theme.ogg")
 
 run = False
 
@@ -80,20 +84,24 @@ class Ship(pygame.sprite.Sprite):
         laser.rect.centery = self.rect.top
         lasers.add(laser)    
 
-    def update(self, bombs):
+    def update(self, bombs,mobs):
         hit_list = pygame.sprite.spritecollide(self, bombs, True)
+        hits = pygame.sprite.spritecollide(self, mobs, True)
 
         for hit in hit_list:
             pygame.mixer.music.pause()
             sad.play()
-            self.shield -= 1
+            self.shield -= 1    
 
+        for h in hits:
+            
+            stage = END
+            
         if self.shield == 0:
             #EXPLOSION.play()
             self.kill()
 
-        if  pygame.sprite.spritecollide(self, mobs, True):
-            self.kill()
+       
     
 class Laser(pygame.sprite.Sprite):
     
@@ -132,7 +140,10 @@ class Mob(pygame.sprite.Sprite):
         hit = pygame.sprite.spritecollide(self, lasers, True)
         if len(hit_list) > 0:
            # EXPLOSION.play()
-            self.kill()
+            player.score += 1
+            for e in  team:
+                e.rect.y += 50
+                self.kill()
         if len(hit) == 0:
             stage = END
 class Team(pygame.sprite.Sprite):
@@ -159,7 +170,8 @@ class Team(pygame.sprite.Sprite):
              
             
             for e in  team:
-                e.rect.y -= self.speed
+                e.rect.y -= 300
+                # e.rect.y -= self.speed
 
         else:
             pass
@@ -224,7 +236,7 @@ class Fleet:
                 self.moving_right = not self.moving_right
                 
                 for m in mobs:
-                    m.rect.y += 50
+                    m.rect.y += 100
 
             
                     
@@ -292,8 +304,14 @@ class FleetT:
 # Make game objects
 ship = Ship(384, 636, ship_img)
 mob1 = Mob (123,-65,enemy)
-mob2 = Mob (256,-65,enemy)
-mob3 = Mob (364,-65,enemy)
+mob2 = Mob (223,-65,enemy)
+mob3 = Mob (323,-65,enemy)
+mob4 = Mob (423,-65,enemy)
+
+mob5 = Mob (0,-165,enemy)
+mob6 = Mob (250,-165,enemy)
+mob7 = Mob (500,-165,enemy)
+
 
 
 team1 = Team (123,564,enemy_img)
@@ -307,7 +325,7 @@ player.score = 0
 
 lasers = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
-mobs.add(mob1,mob2,mob3)
+mobs.add(mob1,mob2,mob3,mob4,mob5,mob6,mob7)
 
 team = pygame.sprite.Group()
 team.add(team1,team2,team3)
@@ -328,19 +346,20 @@ def show_title_screen():
     screen.blit(title_text, [208, 350])
 
 def show_stats(player):
-    score_text = FONT_MD.render(str(player.score), 1, RED)
+    score_text = FONT_LG.render(str(player.score), 1, DARKGREEN)
     screen.blit(score_text, [32, 32])
 
 
 def show_end_screen():
-    screen.blit(win,(0,0))
+    screen.fill(BLACK)
+    screen.blit(winner,(125,150))
     title_text = FONT_XL.render("FOOTBALL!", 1, RED)
-    score_text = FONT_MD.render(str(player.score), 1, RED)
+    score_text = FONT_LG.render(str(player.score), 1, RED)
     screen.blit(score_text, [32, 32])
 
 
 # Game loop
-pygame.mixer.music.play(-1)
+
 
 
 done = False
@@ -358,7 +377,9 @@ while not done:
             elif stage == PLAYING:
                 if event.key == pygame.K_SPACE:
                     ship.shoot()
-
+            if event.key == pygame.K_x:
+                    done = True
+                    
     if stage == PLAYING:
         pressed = pygame.key.get_pressed()
 
@@ -366,14 +387,15 @@ while not done:
             ship.move_left()
         elif pressed[pygame.K_RIGHT]:
             ship.move_right()
+
+        if stage == END:
+            if event.key == pygame.K_SPACE:
+                        stage = START
         
-    if stage == END:
-         if event.key == pygame.K_x:
-                    done = True
     
     # Game logic (Check for collisions, update points, etc.)
    
-    player.update(bombs)
+    player.update(bombs,mobs)
     lasers.update()
     bombs.update(lasers,player)
     mobs.update(lasers)
@@ -397,6 +419,8 @@ while not done:
     show_stats(player)
 
     if stage == START:
+        
+        theme.play()
        
         show_title_screen()
 
