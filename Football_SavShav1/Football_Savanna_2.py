@@ -189,6 +189,8 @@ class Mob(pygame.sprite.Sprite):
             player.score += 1
             for e in  receivers:
                 e.rect.y += 50
+    def lost(self):
+          return self.rect.y >= 665
         
 class Mobagain(pygame.sprite.Sprite):
 
@@ -210,10 +212,15 @@ class Mobagain(pygame.sprite.Sprite):
         
 
     def update(self, lasers):
-        hit_list = pygame.sprite.spritecollide(self, lasers, True,pygame.sprite.mask_surface)
+        hit_list = pygame.sprite.spritecollide(self, lasers, True)
         for hit in hit_list:
             ouch.play()
             self.shield -= 1
+
+        if self.shield == 2:
+            self.image = md1
+       
+          
         
         if len(hit_list) > 0:
             oof.play()
@@ -224,6 +231,11 @@ class Mobagain(pygame.sprite.Sprite):
         if self.shield == 0:
            yeah.play()
            self.kill()
+
+           
+    def lost(self):
+          return self.rect.y >= 665
+  
 
 class Bomb(pygame.sprite.Sprite):
     
@@ -541,28 +553,24 @@ def stats_stuff():
                 with open(data_file, 'r') as f:
                     lines = f.read().splitlines()
 
-                '''scores = []
-                for line in lines:
-                    name, points = line.split(" ")
-                    scores.append((name, int(points)))
-
-
-                scores.sort(key=lambda x: x[1], reverse=True)
+                scores = []
+    
+                scores.sort(key=lambda x: x[0], reverse=True)
                 print(scores)
 
                
 
-                high_name = scores[0][0]
-                high_score = scores[0][1]
+             
+                '''high_score = scores[0]
                 
                 for s in scores:
-                    if s[1] > high_score:
-                        high_name = s[0]
-                        high_score = s[1]
+                    if s[0] > high_score:
+                       
+                        high_score = s[0]'''
 
 
-                text3 = MY_FONT.render((high_name,high_score), True, WHITE)
-                screen.blit(text3, [325, 100])'''
+                text3 = MY_FONT.render((high_score), True, WHITE)
+                screen.blit(text3, [325, 100])
 
                 
                 pygame.draw.rect(screen, RED, [0,0,800,600])
@@ -680,6 +688,11 @@ while not done:
     for t in receivers: 
         if t.has_scored():
             more = True
+
+    for m in mobs: 
+        if m.lost():
+            stage = END
+           
        
     if more:
         level += 1
